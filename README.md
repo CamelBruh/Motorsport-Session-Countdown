@@ -9,7 +9,7 @@ A fully local, browser-based countdown manager for motorsport sessions and event
 ### 🛠 Session Configuration
 - Add custom session name, start date/time, and session duration.
 - Automatically calculates end time based on session length.
-- Quick-pick buttons for 20 / 30 / 60 / 90 minutes.
+- Quick-pick buttons.
 - Edit or delete sessions with intuitive buttons.
 - Sorts sessions by the soonest start time.
 
