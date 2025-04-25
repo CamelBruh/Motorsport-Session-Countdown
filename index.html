@@ -141,6 +141,13 @@
     <button onclick="toggleDarkMode()" class="btn" id="darkModeToggle">
       Dark Mode
     </button>
+    <button onclick="document.getElementById('fileInput').click()" class="btn" id="importButton">
+      Import Sessions
+    </button>
+    <input type="file" id="fileInput" style="display: none;" accept=".json" onchange="importEvents(event)" />
+    <button onclick="exportEvents()" class="btn" id="exportButton">
+      Export Sessions
+    </button>
   </div>
   <div class="form-container">
     <form id="countdownForm">
@@ -350,6 +357,50 @@
     function setSessionTime(minutes) {
       document.getElementById("sessionTime").value = minutes;
       updateEndDateFromSession(); // Update the end time based on session time
+    }
+
+    function importEvents(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        try {
+          const events = JSON.parse(e.target.result);
+
+          // Check if the data is valid
+          if (Array.isArray(events) && events.every(evt => evt.name && evt.startDate && evt.endDate)) {
+            localStorage.setItem("motorsportCountdowns", JSON.stringify(events));
+            alert("Events imported successfully!");
+            updateCountdowns();
+          } else {
+            alert("Invalid file format. Please check the data.");
+          }
+        } catch (err) {
+          alert("Error reading file. Please try again.");
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function exportEvents() {
+      const events = localStorage.getItem("motorsportCountdowns");
+      if (!events) {
+        alert("No events to export.");
+        return;
+      }
+
+      const blob = new Blob([events], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "motorsport_events.json";
+      a.click();
+
+      URL.revokeObjectURL(url);
     }
 
     document.getElementById("startDate").addEventListener("change", updateEndDateFromSession);
