@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="style.css">
+  <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
   <meta charset="UTF-8">
   <title>Live Session Countdown</title>
-  <style>
-body {
+</head>
+<style>
+body{
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -16,168 +18,121 @@ body {
   transition: background 0.5s;
   padding: 20px;
 }
-
-.event-name {
-  font-size: 8vw; /* Scale text to 8% of viewport width */
-  margin-bottom: 10px;
-}
-
-.timer {
-  font-size: 12vw; /* Scale timer text to 12% of viewport width */
-  font-weight: bold;
-}
-
-.start-end {
-  font-size: 4vw; /* Smaller text for start and end time */
-  margin-top: 10px;
-}
-
-.red { background: #c0392b; }
-.green { background: #27ae60; }
-.gray { background: #7f8c8d; }
-
-/* Position the next event section in the top-right corner */
-.top-right {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-  font-size: 0.9rem;
-  z-index: 999;
-  width: 200px;
-  text-align: center;
-}
-
-#nextEvent h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  margin-bottom: 5px;
-}
-
-@media (max-width: 600px) {
-  .event-name {
-    font-size: 10vw; /* On smaller screens, use larger font for event name */
-  }
-
-  .timer {
-    font-size: 15vw; /* Larger timer text on small screens */
-  }
-
-  .start-end {
-    font-size: 5vw;
-  }
-}
-
-@media (min-width: 1200px) {
-  .event-name {
-    font-size: 5vw; /* Slightly smaller on large screens */
-  }
-
-  .timer {
-    font-size: 8vw; /* Keep timer smaller on very large screens */
-  }
-
-  .start-end {
-    font-size: 3vw;
-  }
-}
-
-
-  </style>
-</head>
+</style>
 <body>
+  <div class="top-buttons">
+    <button onclick="window.open('index.html', '_blank')" class="btn" id="openDisplayBtn">
+      Configure Sessions
+    </button>
+  </div>
     <div class="top-right">
         <div id="nextEvent">
-          <h3>Next Event</h3>
+          <h3>Next Session</h3>
           <div id="nextEventDetails">Loading...</div>
         </div>
       </div>
   <div class="event-name" id="eventName">Loading event...</div>
   <div class="timer" id="timerText">--:--:--</div>
   <div class="start-end" id="eventTimes"></div>
-
   <script>
-const eventNameEl = document.getElementById("eventName");
-const timerTextEl = document.getElementById("timerText");
-const eventTimesEl = document.getElementById("eventTimes");
-const nextEventEl = document.getElementById("nextEventDetails");
-
-function loadCountdowns() {
-  const saved = localStorage.getItem("motorsportCountdowns");
-  if (!saved) return [];
-  const parsed = JSON.parse(saved);
-  return parsed.map(e => ({
-    name: e.name,
-    startDate: new Date(e.startDate),
-    endDate: new Date(e.endDate)
-  }));
-}
-
-function findNextEvent(events) {
-  const now = new Date();
-  return events
-    .filter(e => now < e.endDate) // Not finished yet
-    .sort((a, b) => a.startDate - b.startDate)[0]; // Soonest
-}
-
-function findPreviousEvent(events) {
-  const now = new Date();
-  return events
-    .filter(e => now >= e.endDate) // Finished events
-    .sort((a, b) => b.endDate - a.endDate)[0]; // Latest
-}
-
-function updateDisplay() {
-  const events = loadCountdowns();
-  const now = new Date();
-
-  const next = findNextEvent(events);
-  const previous = findPreviousEvent(events);
-
-  if (!next) {
-    // No more events, show previous event ended
-    document.body.className = "gray";
-    eventNameEl.textContent = previous ? `${previous.name} - Session Ended` : "No upcoming events";
-    timerTextEl.textContent = "--:--:--";
-    eventTimesEl.textContent = "";
-    nextEventEl.textContent = "No next event scheduled.";
-  } else {
-    // Show next event
-    eventNameEl.textContent = next.name;
-    eventTimesEl.textContent = `${next.startDate.toLocaleString()} → ${next.endDate.toLocaleString()}`;
-
-    if (now < next.startDate) {
-      const timeLeft = next.startDate - now;
-      timerTextEl.textContent = formatTime(timeLeft);
-      document.body.className = "red";
-    } else if (now >= next.startDate && now < next.endDate) {
-      const timeLeft = next.endDate - now;
-      timerTextEl.textContent = formatTime(timeLeft);
-      document.body.className = "green";
-    } else {
-      // Just finished, move on next interval
-      document.body.className = "gray";
-      timerTextEl.textContent = "--:--:--";
+    const eventNameEl = document.getElementById("eventName");
+    const timerTextEl = document.getElementById("timerText");
+    const eventTimesEl = document.getElementById("eventTimes");
+    const nextEventEl = document.getElementById("nextEventDetails");
+    
+    function loadCountdowns() {
+      const saved = localStorage.getItem("motorsportCountdowns");
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return parsed.map(e => ({
+        name: e.name,
+        startDate: new Date(e.startDate),
+        endDate: new Date(e.endDate)
+      })).sort((a, b) => a.startDate - b.startDate);
     }
-
-    // Update the next event section in the top-right
-    nextEventEl.textContent = `${next.name} at ${next.startDate.toLocaleString()}`;
-  }
-}
-
-function formatTime(ms) {
-  const total = Math.floor(ms / 1000);
-  const hrs = String(Math.floor(total / 3600)).padStart(2, '0');
-  const min = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
-  const sec = String(total % 60).padStart(2, '0');
-  return `${hrs}:${min}:${sec}`;
-}
-
-setInterval(updateDisplay, 1000);
-updateDisplay();
-  </script>
+    
+    function updateDisplay() {
+      const events = loadCountdowns();
+      const now = new Date();
+    
+      if (events.length === 0) {
+        document.body.className = "gray";
+        eventNameEl.textContent = "No sessions configured.";
+        timerTextEl.textContent = "--:--:--";
+        eventTimesEl.textContent = "";
+        nextEventEl.textContent = "No session scheduled.";
+        return;
+      }
+    
+      // Find the current or next active session
+      let currentIndex = events.findIndex(e =>
+        now >= e.startDate && now < e.endDate
+      );
+    
+      if (currentIndex === -1) {
+        // Not in a running session, find the next one to count down to
+        currentIndex = events.findIndex(e => now < e.startDate);
+      }
+    
+      if (currentIndex === -1) {
+        // No future or current session — show last ended
+        const last = events.filter(e => now >= e.endDate).pop();
+        if (last) {
+          document.body.className = "gray";
+          eventNameEl.textContent = `${last.name} - Session Ended`;
+          timerTextEl.textContent = "--:--:--";
+          eventTimesEl.textContent = "";
+        } else {
+          eventNameEl.textContent = "No current or upcoming sessions.";
+        }
+        nextEventEl.textContent = "No session scheduled.";
+        return;
+      }
+    
+      const current = events[currentIndex];
+      const next = events[currentIndex + 1];
+    
+      const nowTime = new Date();
+    
+      // Main display for current or next session
+      eventNameEl.textContent = current.name;
+      eventTimesEl.textContent = `${current.startDate.toLocaleString()} → ${current.endDate.toLocaleString()}`;
+    
+      if (nowTime < current.startDate) {
+        timerTextEl.textContent = formatTime(current.startDate - nowTime);
+        document.body.className = "red";
+      } else if (nowTime >= current.startDate && nowTime < current.endDate) {
+        timerTextEl.textContent = formatTime(current.endDate - nowTime);
+        document.body.className = "green";
+      } else {
+        timerTextEl.textContent = "--:--:--";
+        document.body.className = "gray";
+      }
+    
+      // Top-right next session display (after current one)
+      if (next) {
+        nextEventEl.textContent = `${next.name} at ${next.startDate.toLocaleString()}`;
+      } else {
+        nextEventEl.textContent = "No session scheduled.";
+      }
+    }
+    
+    function formatTime(ms) {
+      const total = Math.floor(ms / 1000);
+      const hrs = String(Math.floor(total / 3600)).padStart(2, '0');
+      const min = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+      const sec = String(total % 60).padStart(2, '0');
+      return `${hrs}:${min}:${sec}`;
+    }
+    
+    setInterval(updateDisplay, 1000);
+    // Listen for localStorage changes from other tabs (e.g. when sessions are imported)
+    window.addEventListener("storage", function (e) {
+      if (e.key === "motorsportCountdowns") {
+        updateDisplay();
+      }
+    });
+    updateDisplay();
+    </script>    
 </body>
 </html>

@@ -73,3 +73,9 @@ A fully local, browser-based countdown manager for motorsport sessions and event
     "endDate": "2025-04-18T07:35:00"
   }
 ]
+```
+
+---
+
+## Built for Motorsports Fans
+Whether you're managing a track day, sim racing league, or major motorsport event – this tool gives you powerful control with a clean, customizable experience.
