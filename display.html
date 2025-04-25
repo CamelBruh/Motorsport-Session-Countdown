@@ -36,6 +36,27 @@ body {
 .green { background: #27ae60; }
 .gray { background: #7f8c8d; }
 
+/* Position the next event section in the top-right corner */
+.top-right {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  z-index: 999;
+  width: 200px;
+  text-align: center;
+}
+
+#nextEvent h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
 @media (max-width: 600px) {
   .event-name {
     font-size: 10vw; /* On smaller screens, use larger font for event name */
@@ -64,77 +85,99 @@ body {
   }
 }
 
+
   </style>
 </head>
 <body>
+    <div class="top-right">
+        <div id="nextEvent">
+          <h3>Next Event</h3>
+          <div id="nextEventDetails">Loading...</div>
+        </div>
+      </div>
   <div class="event-name" id="eventName">Loading event...</div>
   <div class="timer" id="timerText">--:--:--</div>
   <div class="start-end" id="eventTimes"></div>
 
   <script>
-    const eventNameEl = document.getElementById("eventName");
-    const timerTextEl = document.getElementById("timerText");
-    const eventTimesEl = document.getElementById("eventTimes");
+const eventNameEl = document.getElementById("eventName");
+const timerTextEl = document.getElementById("timerText");
+const eventTimesEl = document.getElementById("eventTimes");
+const nextEventEl = document.getElementById("nextEventDetails");
 
-    function loadCountdowns() {
-      const saved = localStorage.getItem("motorsportCountdowns");
-      if (!saved) return [];
-      const parsed = JSON.parse(saved);
-      return parsed.map(e => ({
-        name: e.name,
-        startDate: new Date(e.startDate),
-        endDate: new Date(e.endDate)
-      }));
+function loadCountdowns() {
+  const saved = localStorage.getItem("motorsportCountdowns");
+  if (!saved) return [];
+  const parsed = JSON.parse(saved);
+  return parsed.map(e => ({
+    name: e.name,
+    startDate: new Date(e.startDate),
+    endDate: new Date(e.endDate)
+  }));
+}
+
+function findNextEvent(events) {
+  const now = new Date();
+  return events
+    .filter(e => now < e.endDate) // Not finished yet
+    .sort((a, b) => a.startDate - b.startDate)[0]; // Soonest
+}
+
+function findPreviousEvent(events) {
+  const now = new Date();
+  return events
+    .filter(e => now >= e.endDate) // Finished events
+    .sort((a, b) => b.endDate - a.endDate)[0]; // Latest
+}
+
+function updateDisplay() {
+  const events = loadCountdowns();
+  const now = new Date();
+
+  const next = findNextEvent(events);
+  const previous = findPreviousEvent(events);
+
+  if (!next) {
+    // No more events, show previous event ended
+    document.body.className = "gray";
+    eventNameEl.textContent = previous ? `${previous.name} - Session Ended` : "No upcoming events";
+    timerTextEl.textContent = "--:--:--";
+    eventTimesEl.textContent = "";
+    nextEventEl.textContent = "No next event scheduled.";
+  } else {
+    // Show next event
+    eventNameEl.textContent = next.name;
+    eventTimesEl.textContent = `${next.startDate.toLocaleString()} → ${next.endDate.toLocaleString()}`;
+
+    if (now < next.startDate) {
+      const timeLeft = next.startDate - now;
+      timerTextEl.textContent = formatTime(timeLeft);
+      document.body.className = "red";
+    } else if (now >= next.startDate && now < next.endDate) {
+      const timeLeft = next.endDate - now;
+      timerTextEl.textContent = formatTime(timeLeft);
+      document.body.className = "green";
+    } else {
+      // Just finished, move on next interval
+      document.body.className = "gray";
+      timerTextEl.textContent = "--:--:--";
     }
 
-    function findNextEvent(events) {
-      const now = new Date();
-      return events
-        .filter(e => now < e.endDate) // Not finished yet
-        .sort((a, b) => a.startDate - b.startDate)[0]; // Soonest
-    }
+    // Update the next event section in the top-right
+    nextEventEl.textContent = `${next.name} at ${next.startDate.toLocaleString()}`;
+  }
+}
 
-    function formatTime(ms) {
-      const total = Math.floor(ms / 1000);
-      const hrs = String(Math.floor(total / 3600)).padStart(2, '0');
-      const min = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
-      const sec = String(total % 60).padStart(2, '0');
-      return `${hrs}:${min}:${sec}`;
-    }
+function formatTime(ms) {
+  const total = Math.floor(ms / 1000);
+  const hrs = String(Math.floor(total / 3600)).padStart(2, '0');
+  const min = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+  const sec = String(total % 60).padStart(2, '0');
+  return `${hrs}:${min}:${sec}`;
+}
 
-    function updateDisplay() {
-      const events = loadCountdowns();
-      const next = findNextEvent(events);
-      const now = new Date();
-
-      if (!next) {
-        document.body.className = "gray";
-        eventNameEl.textContent = "No upcoming events";
-        timerTextEl.textContent = "--:--:--";
-        eventTimesEl.textContent = "";
-        return;
-      }
-
-      eventNameEl.textContent = next.name;
-      eventTimesEl.textContent = `${next.startDate.toLocaleString()} → ${next.endDate.toLocaleString()}`;
-
-      if (now < next.startDate) {
-        const timeLeft = next.startDate - now;
-        timerTextEl.textContent = formatTime(timeLeft);
-        document.body.className = "red";
-      } else if (now >= next.startDate && now < next.endDate) {
-        const timeLeft = next.endDate - now;
-        timerTextEl.textContent = formatTime(timeLeft);
-        document.body.className = "green";
-      } else {
-        // Just finished, move on next interval
-        document.body.className = "gray";
-        timerTextEl.textContent = "--:--:--";
-      }
-    }
-
-    setInterval(updateDisplay, 1000);
-    updateDisplay();
+setInterval(updateDisplay, 1000);
+updateDisplay();
   </script>
 </body>
 </html>
