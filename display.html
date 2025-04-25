@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Session Countdown</title>
+  <style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100vh;
+  color: white;
+  transition: background 0.5s;
+  padding: 20px;
+}
+
+.event-name {
+  font-size: 8vw; /* Scale text to 8% of viewport width */
+  margin-bottom: 10px;
+}
+
+.timer {
+  font-size: 12vw; /* Scale timer text to 12% of viewport width */
+  font-weight: bold;
+}
+
+.start-end {
+  font-size: 4vw; /* Smaller text for start and end time */
+  margin-top: 10px;
+}
+
+.red { background: #c0392b; }
+.green { background: #27ae60; }
+.gray { background: #7f8c8d; }
+
+@media (max-width: 600px) {
+  .event-name {
+    font-size: 10vw; /* On smaller screens, use larger font for event name */
+  }
+
+  .timer {
+    font-size: 15vw; /* Larger timer text on small screens */
+  }
+
+  .start-end {
+    font-size: 5vw;
+  }
+}
+
+@media (min-width: 1200px) {
+  .event-name {
+    font-size: 5vw; /* Slightly smaller on large screens */
+  }
+
+  .timer {
+    font-size: 8vw; /* Keep timer smaller on very large screens */
+  }
+
+  .start-end {
+    font-size: 3vw;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="event-name" id="eventName">Loading event...</div>
+  <div class="timer" id="timerText">--:--:--</div>
+  <div class="start-end" id="eventTimes"></div>
+
+  <script>
+    const eventNameEl = document.getElementById("eventName");
+    const timerTextEl = document.getElementById("timerText");
+    const eventTimesEl = document.getElementById("eventTimes");
+
+    function loadCountdowns() {
+      const saved = localStorage.getItem("motorsportCountdowns");
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return parsed.map(e => ({
+        name: e.name,
+        startDate: new Date(e.startDate),
+        endDate: new Date(e.endDate)
+      }));
+    }
+
+    function findNextEvent(events) {
+      const now = new Date();
+      return events
+        .filter(e => now < e.endDate) // Not finished yet
+        .sort((a, b) => a.startDate - b.startDate)[0]; // Soonest
+    }
+
+    function formatTime(ms) {
+      const total = Math.floor(ms / 1000);
+      const hrs = String(Math.floor(total / 3600)).padStart(2, '0');
+      const min = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+      const sec = String(total % 60).padStart(2, '0');
+      return `${hrs}:${min}:${sec}`;
+    }
+
+    function updateDisplay() {
+      const events = loadCountdowns();
+      const next = findNextEvent(events);
+      const now = new Date();
+
+      if (!next) {
+        document.body.className = "gray";
+        eventNameEl.textContent = "No upcoming events";
+        timerTextEl.textContent = "--:--:--";
+        eventTimesEl.textContent = "";
+        return;
+      }
+
+      eventNameEl.textContent = next.name;
+      eventTimesEl.textContent = `${next.startDate.toLocaleString()} → ${next.endDate.toLocaleString()}`;
+
+      if (now < next.startDate) {
+        const timeLeft = next.startDate - now;
+        timerTextEl.textContent = formatTime(timeLeft);
+        document.body.className = "red";
+      } else if (now >= next.startDate && now < next.endDate) {
+        const timeLeft = next.endDate - now;
+        timerTextEl.textContent = formatTime(timeLeft);
+        document.body.className = "green";
+      } else {
+        // Just finished, move on next interval
+        document.body.className = "gray";
+        timerTextEl.textContent = "--:--:--";
+      }
+    }
+
+    setInterval(updateDisplay, 1000);
+    updateDisplay();
+  </script>
+</body>
+</html>
