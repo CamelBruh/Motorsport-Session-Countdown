@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Session Countdown</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark {
+      background: #121212;
+      color: #e0e0e0;
+    }
+    h1 {
+      text-align: center;
+    }
+    .form-container {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+    }
+    body.dark .form-container {
+      background: #1e1e1e;
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+    .countdowns {
+      max-width: 800px;
+      margin: auto;
+    }
+    .countdown {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 8px solid;
+      border-radius: 8px;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    body.dark .countdown {
+      background: #1e1e1e;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      font-size: 1rem;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    .before { border-color: red; }
+    .during { border-color: green; }
+    .after { border-color: gray; }
+    .btn-group {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    .btn-group button {
+      flex: 1;
+      cursor: pointer;
+    }
+    .dark-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 14px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .quick-pick-buttons button {
+      padding: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 5px;
+      border: none;
+      background-color: #3498db;
+      color: white;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    .quick-pick-buttons button:hover {
+      background-color: #2980b9;
+    }
+
+        /* Position the buttons in the top-left corner */
+    .top-buttons {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      gap: 10px;
+      z-index: 999;
+    }
+
+    /* Small button styling */
+    .btn {
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      background-color: #3498db;
+      color: white;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #2980b9;
+    }
+
+    /* Dark mode toggle button */
+    #darkModeToggle {
+      background-color: #2c3e50;
+    }
+
+    #darkModeToggle:hover {
+      background-color: #34495e;
+    }
+  </style>
+</head>
+<body>
+  <h1>Session Countdown Form</h1>
+  <div class="top-buttons">
+    <button onclick="window.open('display.html', '_blank')" class="btn" id="openDisplayBtn">
+      Live Countdown
+    </button>
+    <button onclick="toggleDarkMode()" class="btn" id="darkModeToggle">
+      Dark Mode
+    </button>
+    <button class="btn" onclick="exportEvents()">Export</button>
+    <button class="btn" onclick="triggerImport()">Import</button>
+    <input type="file" id="importInput" style="display:none" accept=".json" onchange="handleImport(this.files)">
+  </div>
+  <div class="form-container">
+    <form id="countdownForm">
+      <input type="hidden" id="editIndex" value="">
+      <label for="eventName">Session Name</label>
+      <input type="text" id="eventName" required>
+
+      <label for="startDate">Start Date & Time</label>
+      <input type="datetime-local" id="startDate" required>
+      
+      <label for="sessionTime">Session Duration (minutes)</label>
+      <input type="number" id="sessionTime" min="1" value="60" required>
+
+      <div class="quick-pick-buttons">
+        <button type="button" onclick="setSessionTime(10)">10 mins</button>
+        <button type="button" onclick="setSessionTime(20)">20 mins</button>
+        <button type="button" onclick="setSessionTime(30)">30 mins</button>
+        <button type="button" onclick="setSessionTime(60)">60 mins</button>
+        <button type="button" onclick="setSessionTime(90)">90 mins</button>
+        <button type="button" onclick="setSessionTime(120)">2 Hours</button>
+        <button type="button" onclick="setSessionTime(180)">3 Hours</button>
+        <button type="button" onclick="setSessionTime(360)">6 Hours</button>
+        <button type="button" onclick="setSessionTime(720)">12 Hours</button>
+      </div>      
+
+      <label for="endDate">End Date & Time</label>
+      <input type="datetime-local" id="endDate" required>
+
+      <button type="submit" id="submitBtn">Add Countdown</button>
+    </form>
+  </div>
+
+  <div class="countdowns" id="countdownList"></div>
+
+  <script>
+/* ---------------- Remote storage helpers ---------------- */
+const API = ""; // Might need to be changed to FQDN or IP address if not running locally
+
+async function fetchJSON(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...opts
+  });
+  if (res.status === 204) return null;
+  return res.json();
+}
+const getEvents   = ()           =>fetch('/events').then(r=>r.json());
+const addEvent    = (evt)        => fetchJSON(`${API}/events`,             { method:"POST", body: JSON.stringify(evt) });
+const updateEvent = (id, evt)    => fetchJSON(`${API}/events/${id}/`,       { method:"PUT",  body: JSON.stringify(evt) });
+const deleteEvent = (id)         => fetch(`${API}/events/${id}/`,       { method:"DELETE" });
+
+const form           = document.getElementById("countdownForm");
+const countdownList  = document.getElementById("countdownList");
+const submitBtn      = document.getElementById("submitBtn");
+
+let countdowns = [];          // will be loaded from server
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name       = document.getElementById("eventName").value.trim();
+  const startDate  = new Date(document.getElementById("startDate").value);
+  const endDate    = new Date(document.getElementById("endDate").value);
+  const editIndex  = document.getElementById("editIndex").value;
+
+  if (startDate >= endDate)  { alert("End date/time must be after start date/time."); return; }
+  if (endDate   <= new Date()){ alert("Event must end in the future."); return; }
+
+  const payload = { name, startDate: startDate.toISOString(), endDate: endDate.toISOString() };
+
+  if (editIndex === "") {
+    // create
+    await addEvent(payload);
+  } else {
+    // update
+    const id = countdowns[parseInt(editIndex)].id;
+    await updateEvent(id, payload);
+    document.getElementById("editIndex").value = "";
+    submitBtn.textContent = "Add Countdown";
+  }
+
+  await reloadEvents();                 // refresh local array from server
+  form.reset();
+  setDefaultDateTime();
+  updateCountdowns();
+});
+
+  function exportEvents(){
+    fetch('/events/export')
+      .then(r=>r.blob())
+      .then(b=>{
+        const url=URL.createObjectURL(b);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download='events.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+  }
+  function triggerImport(){ document.getElementById('importInput').click(); }
+  async function handleImport(files){
+    const f=files[0]; if(!f) return;
+    const text=await f.text();
+    let payload;
+    if(f.name.endsWith('.csv')) payload=csvToJson(text);
+    else{ try{payload=JSON.parse(text);}catch(e){alert('Bad JSON');return;} }
+    await fetch('/events/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    alert('Import finished - refresh list');
+  }
+  function csvToJson(t){
+    const lines=t.trim().split(/\r?\n/); const head=lines[0].split(',');
+    return lines.slice(1).map(l=>{
+      const cols=l.match(/("([^"]|"")*"|[^,]*)/g).map(c=>c.replace(/^"|"$/g,'').replace(/""/g,'"'));
+      const o={}; head.forEach((h,i)=>o[h.trim()]=cols[i]); return o;
+    });
+  }
+
+async function reloadEvents() {
+  countdowns = await getEvents();
+}
+
+function sortByStatus(a, b, now) {
+  const sa = getStatusSortKey(a, now);
+  const sb = getStatusSortKey(b, now);
+  return sa - sb;
+}
+
+function updateCountdowns() {
+  countdownList.innerHTML = "";
+  const now = new Date();
+  // Sort copy, don't mutate original
+  [...countdowns].sort((a,b)=>sortByStatus(a,b,now)).forEach((event, index) => {
+    const start = new Date(event.startDate);
+    const end   = new Date(event.endDate);
+    let status, countdownText, borderClass;
+
+    if (now < start) {
+      countdownText = formatTimeLeft(start - now) + " until start";
+      status = "Upcoming";
+      borderClass = "before";
+    } else if (now >= start && now < end) {
+      countdownText = formatTimeLeft(end - now) + " until end";
+      status = "Live Now";
+      borderClass = "during";
+    } else {
+      countdownText = "Event Finished!";
+      status = "Completed";
+      borderClass = "after";
+    }
+
+    countdownList.insertAdjacentHTML("beforeend", `
+      <div class="countdown ${borderClass}">
+        <strong>${event.name}</strong><br>
+        <small>${start.toLocaleString()} → ${end.toLocaleString()}</small><br>
+        <em>${status}</em><br>
+        ${countdownText}
+        <div class="btn-group">
+          <button onclick="editCountdown(${index})">✏️ Edit</button>
+          <button onclick="deleteCountdownClick(${index})">🗑️ Delete</button>
+        </div>
+      </div>
+    `);
+  });
+}
+
+function formatTimeLeft(ms) {
+  const total = Math.floor(ms / 1000);
+  const days  = Math.floor(total / 86400);
+  const hrs   = Math.floor((total % 86400) / 3600);
+  const mins  = Math.floor((total % 3600) / 60);
+  const secs  = total % 60;
+  return `${days}d ${hrs}h ${mins}m ${secs}s`;
+}
+
+function getStatusSortKey(event, now) {
+  const start = new Date(event.startDate); const end = new Date(event.endDate);
+  if (now < start)               return start.getTime();
+  if (now >= start && now < end) return now.getTime() - 100000;
+  return end.getTime() + 1000000000;
+}
+
+async function deleteCountdownClick(index) {
+  const id = countdowns[index].id;
+  await deleteEvent(id);
+  await reloadEvents();
+  updateCountdowns();
+}
+
+function editCountdown(index) {
+  const event = countdowns[index];
+  document.getElementById("eventName").value = event.name;
+  document.getElementById("startDate").value = toInputDateTime(new Date(event.startDate));
+  document.getElementById("endDate").value   = toInputDateTime(new Date(event.endDate));
+  document.getElementById("editIndex").value = index;
+  submitBtn.textContent = "Update Countdown";
+}
+
+function toInputDateTime(date) {
+  const offset = date.getTimezoneOffset();
+  const local  = new Date(date.getTime() - offset * 60000);
+  return local.toISOString().slice(0,16);
+}
+
+function toggleDarkMode() { document.body.classList.toggle("dark"); }
+
+function setSessionTime(minutes) {
+  document.getElementById("sessionTime").value = minutes;
+  updateEndDateFromSession();
+}
+
+function updateEndDateFromSession() {
+  const startInput = document.getElementById("startDate").value;
+  const sessionMin = parseInt(document.getElementById("sessionTime").value, 10);
+  if (!startInput || isNaN(sessionMin)) return;
+  const start = new Date(startInput);
+  const end   = new Date(start.getTime() + sessionMin * 60000);
+  document.getElementById("endDate").value = toInputDateTime(end);
+}
+
+function setDefaultDateTime() {
+  const now = new Date();
+  const defaultMin = 60;
+  const later = new Date(now.getTime() + defaultMin * 60000);
+  document.getElementById("startDate").value = toInputDateTime(now);
+  document.getElementById("sessionTime").value = defaultMin;
+  document.getElementById("endDate").value = toInputDateTime(later);
+}
+
+/* ------- initialisation ------- */
+document.getElementById("startDate").addEventListener("change", updateEndDateFromSession);
+document.getElementById("sessionTime").addEventListener("input", updateEndDateFromSession);
+
+(async () => {
+  await reloadEvents();
+  updateCountdowns();
+  setDefaultDateTime();
+  toggleDarkMode();
+  setInterval(updateCountdowns, 1000);
+})();
+</script>
+</body>
+</html>
