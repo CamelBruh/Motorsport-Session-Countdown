@@ -106,27 +106,26 @@ const eventTimesEl = document.getElementById("eventTimes");
 const nextEventEl = document.getElementById("nextEventDetails");
 let events=[];
 
-async function getEvents() {
-  const res = await fetch(API + "/events");
-  return res.json();
-}
-
-function findNextEvent() {
+function findNextEvent(events_cache) {
   const now=new Date();
-  console.log("events passed to findNextEvent:", events);
-  return events
+  return events_cache
     .filter(e=>now<new Date(e.endDate))
-    .sort((a,b)=>new Date(a.startDate)-new Date(b.startDate))[0];
-    console.log("Next event found:", events);   
+    .sort((a,b)=> new Date(a.startDate) - new Date(b.startDate))[0];
 }
 
-function findPreviousEvent() {
+function findPreviousEvent(events_cache) {
   const now = new Date();
-  console.log("events passed to findPreviousEvent:", events);
-  return events
-    .filter(e => now >= new Date(e.endDate)) // Finished events
-    .sort((a,b)=> new Date(b.startDate) - new Date(a.startDate))[0]; // Latest
-    console.log("Previous event found:", events);
+  return events_cache
+    .filter(e => now >= new Date(e.endDate))
+    .sort((b,a)=> new Date(b.startDate) - new Date(a.startDate))[0];
+}
+
+function findFollowingEvent(events_cache) {
+  const now = new Date();
+  const future = events_cache
+    .filter(e => now < new Date(e.endDate))
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+  return future[1];
 }
 
 function formatTime(ms) {
@@ -141,6 +140,9 @@ function render(){
   const now=new Date();
   const next=findNextEvent(events);
   const prev=findPreviousEvent(events);
+  const followingEvent = findFollowingEvent(events);
+
+  
   if (!next) {
     document.body.className = "gray";
     eventNameEl.textContent = previous ? `${previous.name} - Session Ended` : "No upcoming events";
@@ -167,12 +169,13 @@ function render(){
 
   }
   // Update the next event section in the top-right
-  nextEventEl.textContent = `${next.name} at ${next.startDate.toLocaleString()}`;
+  nextEventEl.textContent = `${followingEvent.name} at ${followingEvent.startDate.toLocaleString()}`;
 }
 
 async function init(){
   try{
     events=await fetch("/events").then(r=>r.json());
+    console.log("Events loaded:", events);
   }catch(e){
     eventName.textContent="Unable to load events";return;
   }
