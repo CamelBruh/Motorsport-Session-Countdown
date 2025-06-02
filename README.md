@@ -1,12 +1,8 @@
 # 🏁 Motorsport Session Countdown Timer
 
----
-
 ## Local Web Server Version
 
 A fully local, browser-based countdown manager for motorsport sessions and events such as Practice, Qualifying, and Races. Configure, track, and display live countdowns with smart visuals, dark mode, and automatic transitions.
-
----
 
 ##  Features
 
@@ -88,8 +84,6 @@ A lightweight web‑based countdown manager for sessions, races, meetings—anyt
 * Display (`display.html`) – fullscreen live clock for the next session  
 * Back‑end (`server.js`) – Node 20 + Express + SQLite, with REST API and static hosting
 
----
-
 ## Features
 
 * CRUD REST API (`/events`)
@@ -98,7 +92,6 @@ A lightweight web‑based countdown manager for sessions, races, meetings—anyt
 * Simple deployment: Node, systemd, NGINX
 * Recipes for Let’s Encrypt *and* self‑signed TLS
 
----
 
 ## Quick start (local)
 
@@ -111,7 +104,6 @@ open http://localhost:3000/display.html
 
 `events.db` (SQLite) is created automatically.
 
----
 
 ## Production (Ubuntu 24.04)
 
@@ -167,6 +159,7 @@ sudo systemctl enable --now motorsport
 
 Create **/etc/nginx/sites-available/motorsport**
 
+#### Example only
 ```nginx
 server {
     listen 80;
@@ -189,7 +182,7 @@ server {
 }
 ```
 
-Then:
+#### Then:
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/motorsport /etc/nginx/sites-enabled/
@@ -208,12 +201,10 @@ Add TLS later (Let’s Encrypt or self‑signed).
 | POST | `/events` | Create `{name,startDate,endDate}` |
 | PUT  | `/events/:id` | Update |
 | DELETE | `/events/:id` | Remove |
-| GET  | `/events/export?format=json|csv` | Download all |
+| GET  | `/events/export?format=json` | Download all |
 | POST | `/events/import` | Bulk import (array) |
 
 Dates are **ISO‑8601 UTC** strings.
-
----
 
 ## Import / Export
 
@@ -227,6 +218,7 @@ CSV must have header: `id,name,startDate,endDate` (id ignored).
 ## Folder layout
 
 ```
+/opt/motorsport/
 public/
   index.html      # planner UI
   display.html    # live clock
