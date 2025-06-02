@@ -1,4 +1,5 @@
-# 🏁 Motorsport Session Countdown Timer - Local Web Server Version
+# 🏁 Motorsport Session Countdown Timer - 
+## Local Web Server Version
 
 A fully local, browser-based countdown manager for motorsport sessions and events such as Practice, Qualifying, and Races. Configure, track, and display live countdowns with smart visuals, dark mode, and automatic transitions.
 
@@ -78,7 +79,8 @@ A fully local, browser-based countdown manager for motorsport sessions and event
 
 # Advanced Users
 
-# 🏁 Motorsport Session Countdown Timer - Dedicated Web Server Version
+## 🏁 Motorsport Session Countdown Timer - 
+## Dedicated Web Server Version
 
 A lightweight web‑based countdown manager for sessions, races, meetings—anything with a start & end time.
 
