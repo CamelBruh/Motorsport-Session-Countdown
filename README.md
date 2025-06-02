@@ -4,29 +4,29 @@ A fully local, browser-based countdown manager for motorsport sessions and event
 
 ---
 
-## 🌟 Features
+##  Features
 
-### 🛠 Session Configuration
+###  Session Configuration
 - Add custom session name, start date/time, and session duration.
 - Automatically calculates end time based on session length.
 - Quick-pick buttons.
 - Edit or delete sessions with intuitive buttons.
 - Sorts sessions by the soonest start time.
 
-### 📅 Persistent Storage
+###  Persistent Storage
 - All sessions are saved to your browser's `localStorage`.
 - Data is preserved across page reloads.
 
-### 💡 Smart Visuals
+###  Smart Visuals
 - Countdown color:
   - **🔴 Red** before the session starts.
   - **🟢 Green** during the session.
 - After a session ends, it’s labeled as **“Session Ended”**.
 
-### 🌑 Dark Mode
+###  Dark Mode
 - Toggle light/dark themes from both index and display pages.
 
-### 📤 Import/Export
+###  Import/Export
 - **Import** events from a `.json` file.
 - **Export** your current event list to a file for sharing or backup.
 
@@ -39,17 +39,16 @@ A fully local, browser-based countdown manager for motorsport sessions and event
 
 ---
 
-## 📂 Project Files
+## Project Files
 
 - `index.html` – Main UI for managing events.
 - `display.html` – Fullscreen live countdown display.
 - `styles.css` – Core styles (light/dark themes, responsive layout).
-- `script.js` – Application logic (session handling, localStorage, transitions).
 - `events.json` *(optional)* – Sample event data for import.
 
 ---
 
-## 🚀 How to Use
+##  How to Use
 
 1. **Open `index.html`** in your browser.
 2. Click **“Add Event”** to configure sessions.
@@ -63,7 +62,7 @@ A fully local, browser-based countdown manager for motorsport sessions and event
 
 ---
 
-## 💡 Example JSON Format
+##  Example JSON Format
 
 ```json
 [
